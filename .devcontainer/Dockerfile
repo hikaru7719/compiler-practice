@@ -1,7 +1,5 @@
-FROM ubuntu:latest
-RUN apt update
-RUN DEBIAN_FRONTEND=noninteractive apt install -y gcc make git binutils libc6-dev gdb sudo
-RUN adduser --disabled-password --gecos '' user
-RUN echo 'user ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/user
-USER user
-WORKDIR /home/user
+ARG VARIANT=1-bullseye
+FROM mcr.microsoft.com/vscode/devcontainers/go:0-${VARIANT}
+ARG NODE_VERSION="lts/*"
+RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c ". /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && apt-get -y install --no-install-recommends gcc make git binutils libc6-dev gdb sudo

@@ -1,6 +1,18 @@
 {
     "name": "linux",
-    "build": {
-        "dockerfile": "Dockerfile",
-    }
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			"VARIANT": "1.17"
+		}
+	},
+    "settings": { 
+		"go.toolsManagement.checkForUpdates": "local",
+		"go.useLanguageServer": true,
+		"go.gopath": "/go",
+		"go.goroot": "/usr/local/go"
+	},
+    "extensions": [
+		"golang.Go"
+	],
 }
