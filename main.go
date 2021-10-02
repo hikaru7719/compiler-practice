@@ -20,12 +20,23 @@ type Token struct {
 	Next *Token
 	Val  int
 	Str  string
+	Pos  int
 }
 
 var token *Token
+var userInput string
 
 func Error(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
+	os.Exit(1)
+}
+
+func ErrorAt(current int, format string, args ...interface{}) {
+	fmt.Printf("%s\n", userInput)
+	fmt.Printf("%*s", current, " ")
+	fmt.Printf("^ ")
+	fmt.Printf(format, args...)
+	fmt.Printf("\n")
 	os.Exit(1)
 }
 
@@ -46,7 +57,7 @@ func Expect(op string) {
 
 func ExpectNumber() int {
 	if token.Kind != TK_NUM {
-		Error("数ではありません")
+		ErrorAt(token.Pos, "数ではありません")
 	}
 	val := token.Val
 	token = token.Next
@@ -57,8 +68,8 @@ func atEOF() bool {
 	return token.Kind == TK_EOF
 }
 
-func NewToken(kind TokenKind, cur *Token, str string) *Token {
-	newToken := &Token{Kind: kind, Str: str}
+func NewToken(kind TokenKind, cur *Token, str string, current int) *Token {
+	newToken := &Token{Kind: kind, Str: str, Pos: current}
 	cur.Next = newToken
 	return newToken
 }
@@ -77,22 +88,22 @@ func Tokenize(p string) *Token {
 		}
 
 		if s == '+' || s == '-' {
-			cur = NewToken(TK_RESERVED, cur, string(s))
+			cur = NewToken(TK_RESERVED, cur, string(s), current)
 			current++
 			continue
 		}
 
 		if unicode.IsDigit(s) {
-			cur = NewToken(TK_NUM, cur, string(s))
+			cur = NewToken(TK_NUM, cur, string(s), current)
 			result, readed := strtol(p, current)
 			cur.Val = result
 			current += readed
 			continue
 		}
 
-		Error("トークナイズできません")
+		ErrorAt(current, "トークナイズできません")
 	}
-	NewToken(TK_EOF, cur, "$")
+	NewToken(TK_EOF, cur, "$", current)
 	return head.Next
 }
 
@@ -101,7 +112,7 @@ func main() {
 		fmt.Printf("引数の個数が正しくありません\n")
 		os.Exit(1)
 	}
-
+	userInput = os.Args[1]
 	token = Tokenize(os.Args[1])
 
 	fmt.Printf(".intel_syntax noprefix\n")
