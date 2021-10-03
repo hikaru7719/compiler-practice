@@ -23,6 +23,23 @@ type Token struct {
 	Pos  int
 }
 
+type NodeKind int
+
+const (
+	ND_ADD NodeKind = iota + 1
+	ND_SUB
+	ND_MUL
+	ND_DIV
+	ND_NUM
+)
+
+type Node struct {
+	Kind NodeKind
+	Lhs  *Node
+	Rhs  *Node
+	Var  int
+}
+
 var token *Token
 var userInput string
 
