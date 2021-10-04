@@ -37,7 +37,7 @@ type Node struct {
 	Kind NodeKind
 	Lhs  *Node
 	Rhs  *Node
-	Var  int
+	Val  int
 }
 
 var token *Token
@@ -122,6 +122,57 @@ func Tokenize(p string) *Token {
 	}
 	NewToken(TK_EOF, cur, "$", current)
 	return head.Next
+}
+
+func NewNode(kind NodeKind, lhs *Node, rhs *Node) *Node {
+	return &Node{
+		Kind: kind,
+		Lhs:  lhs,
+		Rhs:  rhs,
+	}
+}
+
+func NewNodeNum(val int) *Node {
+	return &Node{
+		Kind: ND_NUM,
+		Val:  val,
+	}
+}
+
+func Expr() *Node {
+	node := Mul()
+	for {
+		if Consume("+") {
+			node = NewNode(ND_ADD, node, Mul())
+		} else if Consume("-") {
+			node = NewNode(ND_SUB, node, Mul())
+		} else {
+			return node
+		}
+	}
+}
+
+func Mul() *Node {
+	node := Primary()
+
+	for {
+		if Consume("*") {
+			node = NewNode(ND_MUL, node, Primary())
+		} else if Consume("/") {
+			node = NewNode(ND_DIV, node, Primary())
+		} else {
+			return node
+		}
+	}
+}
+
+func Primary() *Node {
+	if Consume("(") {
+		node := Expr()
+		Expect(")")
+		return node
+	}
+	return NewNodeNum(ExpectNumber())
 }
 
 func main() {
