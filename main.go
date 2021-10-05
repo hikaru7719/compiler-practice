@@ -81,7 +81,7 @@ func ExpectNumber() int {
 	return val
 }
 
-func atEOF() bool {
+func AtEOF() bool {
 	return token.Kind == TK_EOF
 }
 
@@ -112,7 +112,7 @@ func Tokenize(p string) *Token {
 
 		if unicode.IsDigit(s) {
 			cur = NewToken(TK_NUM, cur, string(s), current)
-			result, readed := strtol(p, current)
+			result, readed := Strtol(p, current)
 			cur.Val = result
 			current += readed
 			continue
@@ -188,7 +188,7 @@ func main() {
 	fmt.Printf("main:\n")
 	fmt.Printf("	mov rax, %d\n", ExpectNumber())
 
-	for !atEOF() {
+	for !AtEOF() {
 
 		if Consume("+") {
 			fmt.Printf("	add rax, %d\n", ExpectNumber())
@@ -203,7 +203,7 @@ func main() {
 	os.Exit(0)
 }
 
-func strtol(str string, current int) (result int, readed int) {
+func Strtol(str string, current int) (result int, readed int) {
 	for len(str) > current+readed {
 		pop := str[current : current+readed+1]
 		num, err := strconv.ParseInt(pop, 10, 64)
