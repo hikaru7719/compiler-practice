@@ -175,6 +175,33 @@ func Primary() *Node {
 	return NewNodeNum(ExpectNumber())
 }
 
+func Gen(node *Node) {
+	if node.Kind == ND_NUM {
+		fmt.Printf("	push %d\n", node.Val)
+		return
+	}
+
+	Gen(node.Lhs)
+	Gen(node.Rhs)
+
+	fmt.Printf("	pop rdi\n")
+	fmt.Printf("	pop rax\n")
+
+	switch node.Kind {
+	case ND_ADD:
+		fmt.Printf("	add rax, rdi\n")
+	case ND_SUB:
+		fmt.Printf("	sub rax, rdi\n")
+	case ND_MUL:
+		fmt.Printf("	imul rax, rdi\n")
+	case ND_DIV:
+		fmt.Printf("	cqo\n")
+		fmt.Printf("	idiv rdi\n")
+	}
+
+	fmt.Printf("	push rax\n")
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("引数の個数が正しくありません\n")
