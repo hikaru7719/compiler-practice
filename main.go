@@ -104,7 +104,7 @@ func Tokenize(p string) *Token {
 			continue
 		}
 
-		if s == '+' || s == '-' {
+		if s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' {
 			cur = NewToken(TK_RESERVED, cur, string(s), current)
 			current++
 			continue
@@ -209,23 +209,15 @@ func main() {
 	}
 	userInput = os.Args[1]
 	token = Tokenize(os.Args[1])
+	node := Expr()
 
 	fmt.Printf(".intel_syntax noprefix\n")
 	fmt.Printf(".global main\n")
 	fmt.Printf("main:\n")
-	fmt.Printf("	mov rax, %d\n", ExpectNumber())
 
-	for !AtEOF() {
+	Gen(node)
 
-		if Consume("+") {
-			fmt.Printf("	add rax, %d\n", ExpectNumber())
-			continue
-		}
-
-		Expect("-")
-		fmt.Printf("	sub rax, %d\n", ExpectNumber())
-	}
-
+	fmt.Printf("	pop rax\n")
 	fmt.Printf("	ret\n")
 	os.Exit(0)
 }

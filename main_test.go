@@ -35,7 +35,7 @@ func TestStrtol(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			num, i := strtol(tc.input, tc.current)
+			num, i := Strtol(tc.input, tc.current)
 			assert.Equal(t, tc.expectNum, num)
 			assert.Equal(t, tc.expectI, i)
 		})
