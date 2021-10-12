@@ -21,6 +21,7 @@ type Token struct {
 	Val  int
 	Str  string
 	Pos  int
+	Len  int
 }
 
 type NodeKind int
@@ -58,7 +59,7 @@ func ErrorAt(current int, format string, args ...interface{}) {
 }
 
 func Consume(op string) bool {
-	if str := token.Str[:1]; token.Kind != TK_RESERVED || str != op {
+	if str := token.Str[:token.Len]; token.Kind != TK_RESERVED || len(op) != token.Len || str != op {
 		return false
 	}
 	token = token.Next
@@ -66,7 +67,7 @@ func Consume(op string) bool {
 }
 
 func Expect(op string) {
-	if str := token.Str[:1]; token.Kind != TK_RESERVED || str != op {
+	if str := token.Str[:token.Len]; token.Kind != TK_RESERVED || len(op) != token.Len || str != op {
 		Error("%sではありません", op)
 	}
 	token = token.Next
