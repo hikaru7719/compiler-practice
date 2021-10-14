@@ -27,11 +27,15 @@ type Token struct {
 type NodeKind int
 
 const (
-	ND_ADD NodeKind = iota + 1
-	ND_SUB
-	ND_MUL
-	ND_DIV
-	ND_NUM
+	ND_ADD        NodeKind = iota + 1 // +
+	ND_SUB                            // -
+	ND_MUL                            // *
+	ND_DIV                            // /
+	ND_NUM                            // number
+	ND_EQUAL                          // ==
+	ND_NOT_EQUAL                      // !=
+	ND_LESS                           // <
+	ND_LESS_EQUAL                     // <=
 )
 
 type Node struct {
@@ -87,7 +91,7 @@ func AtEOF() bool {
 }
 
 func NewToken(kind TokenKind, cur *Token, str string, current int) *Token {
-	newToken := &Token{Kind: kind, Str: str, Pos: current}
+	newToken := &Token{Kind: kind, Str: str, Pos: current, Len: len(str)}
 	cur.Next = newToken
 	return newToken
 }
@@ -101,6 +105,18 @@ func Tokenize(p string) *Token {
 		s := rune(p[current])
 
 		if unicode.IsSpace(s) {
+			current++
+			continue
+		}
+
+		if s == '=' || s == '<' || s == '>' || s == '!' {
+			word := string(p[current : current+2])
+			if word == "==" || word == "<=" || word == ">=" || word == "!=" {
+				cur = NewToken(TK_RESERVED, cur, word, current)
+				current += 2
+				continue
+			}
+			cur = NewToken(TK_RESERVED, cur, string(s), current)
 			current++
 			continue
 		}
@@ -141,6 +157,40 @@ func NewNodeNum(val int) *Node {
 }
 
 func Expr() *Node {
+	return Equality()
+}
+
+func Equality() *Node {
+	node := Relational()
+	for {
+		if Consume("==") {
+			node = NewNode(ND_EQUAL, node, Relational())
+		} else if Consume("!=") {
+			node = NewNode(ND_NOT_EQUAL, node, Relational())
+		} else {
+			return node
+		}
+	}
+}
+
+func Relational() *Node {
+	node := Add()
+	for {
+		if Consume("<=") {
+			node = NewNode(ND_LESS_EQUAL, node, Add())
+		} else if Consume("<") {
+			node = NewNode(ND_LESS, node, Add())
+		} else if Consume(">=") {
+			node = NewNode(ND_LESS_EQUAL, Add(), node)
+		} else if Consume(">") {
+			node = NewNode(ND_LESS, Add(), node)
+		} else {
+			return node
+		}
+	}
+}
+
+func Add() *Node {
 	node := Mul()
 	for {
 		if Consume("+") {
@@ -208,6 +258,22 @@ func Gen(node *Node) {
 	case ND_DIV:
 		fmt.Printf("	cqo\n")
 		fmt.Printf("	idiv rdi\n")
+	case ND_EQUAL:
+		fmt.Printf("	cmp rax, rdi\n")
+		fmt.Printf("	sete al\n")
+		fmt.Printf("	movzb rax, al\n")
+	case ND_LESS:
+		fmt.Printf("	cmp rax, rdi\n")
+		fmt.Printf("	setl al\n")
+		fmt.Printf("	movzb rax, al\n")
+	case ND_LESS_EQUAL:
+		fmt.Printf("	cmp rax, rdi\n")
+		fmt.Printf("	setle al\n")
+		fmt.Printf("	movzb rax, al\n")
+	case ND_NOT_EQUAL:
+		fmt.Printf("	cmp rax, rdi\n")
+		fmt.Printf("	setne al\n")
+		fmt.Printf("	movzb rax, al\n")
 	}
 
 	fmt.Printf("	push rax\n")
