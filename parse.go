@@ -141,7 +141,7 @@ func Tokenize(p string) *Token {
 			continue
 		}
 
-		if s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' {
+		if s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' || s == ';' {
 			cur = NewToken(TK_RESERVED, cur, string(s), current)
 			current++
 			continue

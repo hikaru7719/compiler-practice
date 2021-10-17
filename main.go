@@ -11,23 +11,23 @@ func main() {
 		os.Exit(1)
 	}
 	userInput = os.Args[1]
-	token = Tokenize(os.Args[1])
-	node := Expr()
+	token = Tokenize(userInput)
+	Program()
 
 	fmt.Printf(".intel_syntax noprefix\n")
 	fmt.Printf(".global main\n")
 	fmt.Printf("main:\n")
 
-	fmt.Printf("	push rbo\n")
+	fmt.Printf("	push rbp\n")
 	fmt.Printf("	mov rbp, rsp\n")
 	fmt.Printf("	sub rsp, 208\n")
 
 	for i := 0; code[i] != nil; i++ {
-		Gen(node)
+		Gen(code[i])
 		fmt.Printf("	pop rax\n")
 	}
 
-	fmt.Printf("	mov rsp\n")
+	fmt.Printf("	mov rsp, rbp\n")
 	fmt.Printf("	pop rbp\n")
 	fmt.Printf("	ret\n")
 	os.Exit(0)

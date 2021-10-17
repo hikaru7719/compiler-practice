@@ -7,7 +7,7 @@ func GenLval(node *Node) {
 		Error("代入の左辺値が変数ではありません")
 	}
 
-	fmt.Printf("	mob rax, rbp\n")
+	fmt.Printf("	mov rax, rbp\n")
 	fmt.Printf("	sub rax, %d\n", node.Offset)
 	fmt.Printf("	push rax\n")
 }
@@ -16,19 +16,22 @@ func Gen(node *Node) {
 	switch node.Kind {
 	case ND_NUM:
 		fmt.Printf("	push %d\n", node.Val)
+		return
 	case ND_LVAR:
 		GenLval(node)
 		fmt.Printf("	pop rax\n")
 		fmt.Printf("	mov rax, [rax]\n")
 		fmt.Printf("	push rax\n")
+		return
 	case ND_ASSIGN:
-		GenLval(node)
+		GenLval(node.Lhs)
 		Gen(node.Rhs)
 
 		fmt.Printf("	pop rdi\n")
 		fmt.Printf("	pop rax\n")
 		fmt.Printf("	mov [rax], rdi\n")
 		fmt.Printf("	push rdi\n")
+		return
 	}
 
 	Gen(node.Lhs)
