@@ -342,8 +342,8 @@ func Primary() *Node {
 			node.Offset = localVar.Offset
 		} else if locals != nil {
 			lVar := &LocalVar{
-				Name:   token.Str,
-				Len:    token.Len,
+				Name:   tok.Str,
+				Len:    tok.Len,
 				Offset: locals.Offset + 8,
 				Next:   locals,
 			}
@@ -351,8 +351,8 @@ func Primary() *Node {
 			locals = lVar
 		} else {
 			lVar := &LocalVar{
-				Name:   token.Str,
-				Len:    token.Len,
+				Name:   tok.Str,
+				Len:    tok.Len,
 				Offset: 8,
 				Next:   locals,
 			}

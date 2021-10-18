@@ -50,4 +50,9 @@ assert 1 "a=1; a;"
 assert 8 "b=2; b * 4;"
 assert 8 "c=2; b=4; c*b;"
 assert 9 "return 9;"
+
+assert 1 "abc=1; abc;"
+assert 8 "bc=2; bc * 4;"
+assert 8 "cd=2; ab=4; cd*ab;"
+assert 2 "abc=2; return abc;"
 echo OK
