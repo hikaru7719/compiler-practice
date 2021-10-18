@@ -49,4 +49,5 @@ assert 0 "2!=2;"
 assert 1 "a=1; a;"
 assert 8 "b=2; b * 4;"
 assert 8 "c=2; b=4; c*b;"
+assert 9 "return 9;"
 echo OK

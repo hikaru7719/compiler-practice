@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -14,6 +15,7 @@ const (
 	TK_IDENT
 	TK_NUM
 	TK_EOF
+	TK_RETRUN
 )
 
 type Token struct {
@@ -39,6 +41,7 @@ const (
 	ND_LESS_EQUAL                     // <=
 	ND_ASSIGN                         // assign
 	ND_LVAR                           // local variable
+	ND_RETURN                         // retrun
 )
 
 type Node struct {
@@ -49,9 +52,17 @@ type Node struct {
 	Offset int
 }
 
+type LocalVar struct {
+	Name   string
+	Len    int
+	Offset int
+	Next   *LocalVar
+}
+
 var token *Token
 var userInput string
 var code [100]*Node
+var locals *LocalVar
 
 func Error(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
@@ -84,6 +95,14 @@ func ConsumeIdent() *Token {
 	return returnToken
 }
 
+func ConsumeKind(kind TokenKind) bool {
+	if kind != token.Kind {
+		return false
+	}
+	token = token.Next
+	return true
+}
+
 func Expect(op string) {
 	if str := token.Str[:token.Len]; token.Kind != TK_RESERVED || len(op) != token.Len || str != op {
 		Error("%sではありません", op)
@@ -110,6 +129,20 @@ func NewToken(kind TokenKind, cur *Token, str string, current int) *Token {
 	return newToken
 }
 
+func IsAlnum(c rune) bool {
+	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || (c == '_')
+}
+
+func Ident(p string, current int) (string, int) {
+	var result strings.Builder
+	readed := 0
+	for IsAlnum(rune(p[current+readed])) {
+		result.WriteRune(rune(p[current+readed]))
+		readed++
+	}
+	return result.String(), readed
+}
+
 func Tokenize(p string) *Token {
 	var head Token
 	var cur *Token = &head
@@ -123,9 +156,19 @@ func Tokenize(p string) *Token {
 			continue
 		}
 
+		// return token
+		if s == 'r' && len(p[current:]) >= 6 {
+			if str := p[current : current+6]; str == "return" && !IsAlnum(rune(p[current+6])) {
+				cur = NewToken(TK_RETRUN, cur, str, current)
+				current += 6
+				continue
+			}
+		}
+
 		if 'a' <= s && s <= 'z' {
-			cur = NewToken(TK_IDENT, cur, string(s), current)
-			current++
+			ident, readed := Ident(p, current)
+			cur = NewToken(TK_IDENT, cur, ident, current)
+			current += readed
 			continue
 		}
 
@@ -161,6 +204,15 @@ func Tokenize(p string) *Token {
 	return head.Next
 }
 
+func FindLocalVar(token *Token) *LocalVar {
+	for localVar := locals; localVar != nil; localVar = localVar.Next {
+		if localVar.Len == token.Len && localVar.Name == token.Str {
+			return localVar
+		}
+	}
+	return nil
+}
+
 func NewNode(kind NodeKind, lhs *Node, rhs *Node) *Node {
 	return &Node{
 		Kind: kind,
@@ -186,8 +238,15 @@ func Program() {
 }
 
 func Stmt() *Node {
-	node := Expr()
-	Expect(";")
+	var node *Node
+	if ConsumeKind(TK_RETRUN) {
+		node = NewNode(ND_RETURN, Expr(), nil)
+	} else {
+		node = Expr()
+	}
+	if !Consume(";") {
+		ErrorAt(token.Pos, "';'ではないトークンです")
+	}
 	return node
 }
 
@@ -279,7 +338,28 @@ func Primary() *Node {
 
 	if tok := ConsumeIdent(); tok != nil {
 		node := NewNode(ND_LVAR, nil, nil)
-		node.Offset = int(tok.Str[0]) - 'a' + 1
+		if localVar := FindLocalVar(tok); localVar != nil {
+			node.Offset = localVar.Offset
+		} else if locals != nil {
+			lVar := &LocalVar{
+				Name:   token.Str,
+				Len:    token.Len,
+				Offset: locals.Offset + 8,
+				Next:   locals,
+			}
+			node.Offset = locals.Offset + 8
+			locals = lVar
+		} else {
+			lVar := &LocalVar{
+				Name:   token.Str,
+				Len:    token.Len,
+				Offset: 8,
+				Next:   locals,
+			}
+			node.Offset = 8
+			locals = lVar
+		}
+
 		return node
 	}
 

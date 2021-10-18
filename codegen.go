@@ -14,6 +14,13 @@ func GenLval(node *Node) {
 
 func Gen(node *Node) {
 	switch node.Kind {
+	case ND_RETURN:
+		Gen(node.Lhs)
+		fmt.Printf("	pop rax\n")
+		fmt.Printf("	mov rsp, rbp\n")
+		fmt.Printf("	pop rbp\n")
+		fmt.Printf("	ret\n")
+		return
 	case ND_NUM:
 		fmt.Printf("	push %d\n", node.Val)
 		return
