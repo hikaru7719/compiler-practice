@@ -16,6 +16,8 @@ const (
 	TK_NUM
 	TK_EOF
 	TK_RETRUN
+	TK_IF
+	TK_ELSE
 )
 
 type Token struct {
@@ -42,12 +44,20 @@ const (
 	ND_ASSIGN                         // assign
 	ND_LVAR                           // local variable
 	ND_RETURN                         // retrun
+	ND_IF                             // if
+	ND_IF_ELSE                        // if else
 )
 
 type Node struct {
-	Kind   NodeKind
-	Lhs    *Node
-	Rhs    *Node
+	Kind NodeKind
+	Lhs  *Node
+	Rhs  *Node
+
+	// if
+	Compare *Node
+	Then    *Node
+	Else    *Node
+
 	Val    int
 	Offset int
 }
@@ -165,6 +175,24 @@ func Tokenize(p string) *Token {
 			}
 		}
 
+		// if token
+		if s == 'i' && len(p[current:]) >= 2 {
+			if str := p[current : current+2]; str == "if" && !IsAlnum(rune(p[current+2])) {
+				cur = NewToken(TK_IF, cur, str, current)
+				current += 2
+				continue
+			}
+		}
+
+		// else token
+		if s == 'e' && len(p[current:]) >= 4 {
+			if str := p[current : current+4]; str == "else" && !IsAlnum(rune(p[current+4])) {
+				cur = NewToken(TK_ELSE, cur, str, current)
+				current += 4
+				continue
+			}
+		}
+
 		if 'a' <= s && s <= 'z' {
 			ident, readed := Ident(p, current)
 			cur = NewToken(TK_IDENT, cur, ident, current)
@@ -221,6 +249,23 @@ func NewNode(kind NodeKind, lhs *Node, rhs *Node) *Node {
 	}
 }
 
+func NewNodeIfElse(compare *Node, then *Node, el *Node) *Node {
+	return &Node{
+		Kind:    ND_IF_ELSE,
+		Compare: compare,
+		Then:    then,
+		Else:    el,
+	}
+}
+
+func NewNodeIf(compare *Node, then *Node) *Node {
+	return &Node{
+		Kind:    ND_IF,
+		Compare: compare,
+		Then:    then,
+	}
+}
+
 func NewNodeNum(val int) *Node {
 	return &Node{
 		Kind: ND_NUM,
@@ -241,11 +286,31 @@ func Stmt() *Node {
 	var node *Node
 	if ConsumeKind(TK_RETRUN) {
 		node = NewNode(ND_RETURN, Expr(), nil)
+		if !Consume(";") {
+			ErrorAt(token.Pos, "';'ではないトークンです")
+		}
+	} else if ConsumeKind(TK_IF) {
+		if Consume("(") {
+			compare := Expr()
+			if Consume(")") {
+				then := Stmt()
+				if ConsumeKind(TK_ELSE) {
+					el := Stmt()
+					node = NewNodeIfElse(compare, then, el)
+				} else {
+					node = NewNodeIf(compare, then)
+				}
+			} else {
+				ErrorAt(token.Pos, "')'ではないトークンです")
+			}
+		} else {
+			ErrorAt(token.Pos, "'('ではないトークンです")
+		}
 	} else {
 		node = Expr()
-	}
-	if !Consume(";") {
-		ErrorAt(token.Pos, "';'ではないトークンです")
+		if !Consume(";") {
+			ErrorAt(token.Pos, "';'ではないトークンです")
+		}
 	}
 	return node
 }

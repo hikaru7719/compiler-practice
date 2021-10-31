@@ -55,4 +55,9 @@ assert 1 "abc=1; abc;"
 assert 8 "bc=2; bc * 4;"
 assert 8 "cd=2; ab=4; cd*ab;"
 assert 2 "abc=2; return abc;"
+
+assert 2 "abc=1; if(abc>0) abc=2; abc;"
+assert 1 "abc=1; if(abc>1) abc=2; abc;"
+assert 2 "abc=1; if(abc>0) abc=2; else abc=3; abc;"
+assert 3 "abc=1; if(abc>1) abc=2; else abc=3; abc;"
 echo OK

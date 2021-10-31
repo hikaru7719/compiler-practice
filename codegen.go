@@ -2,6 +2,16 @@ package main
 
 import "fmt"
 
+var incrementNumber = 0
+
+func UniqueNum() int {
+	return incrementNumber
+}
+
+func Increment() {
+	incrementNumber += 1
+}
+
 func GenLval(node *Node) {
 	if node.Kind != ND_LVAR {
 		Error("代入の左辺値が変数ではありません")
@@ -14,6 +24,33 @@ func GenLval(node *Node) {
 
 func Gen(node *Node) {
 	switch node.Kind {
+	case ND_IF_ELSE:
+		lelse := UniqueNum()
+		Increment()
+		lend := UniqueNum()
+		Increment()
+
+		Gen(node.Compare)
+		fmt.Printf("	pop rax\n")
+		fmt.Printf("	cmp rax, 0\n")
+		fmt.Printf("	je .Lelse%d\n", lelse)
+		Gen(node.Then)
+		fmt.Printf("	jmp .Lend%d\n", lend)
+		fmt.Printf(".Lelse%d:\n", lelse)
+		Gen(node.Else)
+		fmt.Printf(".Lend%d:\n", lend)
+		return
+	case ND_IF:
+		lend := UniqueNum()
+		Increment()
+
+		Gen(node.Compare)
+		fmt.Printf("	pop rax\n")
+		fmt.Printf("	cmp rax, 0\n")
+		fmt.Printf("	je .Lend%d\n", lend)
+		Gen(node.Then)
+		fmt.Printf(".Lend%d:\n", lend)
+		return
 	case ND_RETURN:
 		Gen(node.Lhs)
 		fmt.Printf("	pop rax\n")
