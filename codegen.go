@@ -66,6 +66,35 @@ func Gen(node *Node) {
 		fmt.Printf("	jmp .Lbegin%d\n", lbegin)
 		fmt.Printf(".Lend%d:\n", lend)
 		return
+	case ND_FOR:
+		lbegin := UniqueNum()
+		Increment()
+		lend := UniqueNum()
+		Increment()
+
+		if node.Init != nil {
+			Gen(node.Init)
+		}
+
+		fmt.Printf(".Lbegin%d:\n", lbegin)
+
+		if node.Compare != nil {
+			Gen(node.Compare)
+		}
+
+		fmt.Printf("	pop rax\n")
+		fmt.Printf("	cmp rax, 0\n")
+		fmt.Printf("	je .Lend%d\n", lend)
+
+		Gen(node.Then)
+
+		if node.After != nil {
+			Gen(node.After)
+		}
+
+		fmt.Printf("	jmp .Lbegin%d\n", lbegin)
+		fmt.Printf(".Lend%d:\n", lend)
+		return
 	case ND_RETURN:
 		Gen(node.Lhs)
 		fmt.Printf("	pop rax\n")

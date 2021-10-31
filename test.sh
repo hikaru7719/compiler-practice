@@ -62,4 +62,9 @@ assert 2 "abc=1; if(abc>0) abc=2; else abc=3; abc;"
 assert 3 "abc=1; if(abc>1) abc=2; else abc=3; abc;"
 
 assert 4 "a=1; while(a<4) a=a+1; a;"
+assert 1 "a=1; for(; a!=1; ;) a=2; a;"
+assert 1 "a=1; for(i=0; a!=1; i=i+1;) a=2; a;"
+assert 1 "a=1; for(i=1; i!=1;;) a=2; a;"
+assert 2 "a=1; for(i=1; i<2; i=i+1;) a=2; a;"
+assert 4 "a=1; for(i=0; i<3; i=i+1;) a=a+1; a;"
 echo OK

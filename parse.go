@@ -19,6 +19,7 @@ const (
 	TK_IF
 	TK_ELSE
 	TK_WHILE
+	TK_FOR
 )
 
 type Token struct {
@@ -47,7 +48,8 @@ const (
 	ND_RETURN                         // retrun
 	ND_IF                             // if
 	ND_IF_ELSE                        // if else
-	ND_WHILE
+	ND_WHILE                          // while
+	ND_FOR                            // for
 )
 
 type Node struct {
@@ -59,6 +61,10 @@ type Node struct {
 	Compare *Node
 	Then    *Node
 	Else    *Node
+
+	// for
+	Init  *Node
+	After *Node
 
 	Val    int
 	Offset int
@@ -204,6 +210,15 @@ func Tokenize(p string) *Token {
 			}
 		}
 
+		// for token
+		if s == 'f' && len(p[current:]) >= 3 {
+			if str := p[current : current+3]; str == "for" && !IsAlnum(rune(p[current+3])) {
+				cur = NewToken(TK_FOR, cur, str, current)
+				current += 3
+				continue
+			}
+		}
+
 		if 'a' <= s && s <= 'z' {
 			ident, readed := Ident(p, current)
 			cur = NewToken(TK_IDENT, cur, ident, current)
@@ -284,6 +299,17 @@ func NewNodeWhile(compare *Node, then *Node) *Node {
 		Then:    then,
 	}
 }
+
+func NewNodeFor(init *Node, compare *Node, after *Node, then *Node) *Node {
+	return &Node{
+		Kind:    ND_FOR,
+		Init:    init,
+		Compare: compare,
+		After:   after,
+		Then:    then,
+	}
+}
+
 func NewNodeNum(val int) *Node {
 	return &Node{
 		Kind: ND_NUM,
@@ -330,6 +356,37 @@ func Stmt() *Node {
 			if Consume(")") {
 				then := Stmt()
 				node = NewNodeWhile(compare, then)
+			} else {
+				ErrorAt(token.Pos, "')'ではないトークンです")
+			}
+		} else {
+			ErrorAt(token.Pos, "'('ではないトークンです")
+		}
+	} else if ConsumeKind(TK_FOR) {
+		var init, compare, after *Node
+		if Consume("(") {
+			for i := 0; i < 3; i++ {
+				if Consume(";") {
+					continue
+				}
+				if i == 0 {
+					init = Expr()
+				}
+				if i == 1 {
+					compare = Expr()
+				}
+				if i == 2 {
+					after = Expr()
+				}
+				if Consume(";") {
+					continue
+				} else {
+					ErrorAt(token.Pos, "';'ではないトークンです")
+				}
+			}
+			if Consume(")") {
+				then := Stmt()
+				node = NewNodeFor(init, compare, after, then)
 			} else {
 				ErrorAt(token.Pos, "')'ではないトークンです")
 			}
