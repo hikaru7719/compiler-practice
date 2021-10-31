@@ -18,6 +18,7 @@ const (
 	TK_RETRUN
 	TK_IF
 	TK_ELSE
+	TK_WHILE
 )
 
 type Token struct {
@@ -46,6 +47,7 @@ const (
 	ND_RETURN                         // retrun
 	ND_IF                             // if
 	ND_IF_ELSE                        // if else
+	ND_WHILE
 )
 
 type Node struct {
@@ -53,7 +55,7 @@ type Node struct {
 	Lhs  *Node
 	Rhs  *Node
 
-	// if
+	// if, while
 	Compare *Node
 	Then    *Node
 	Else    *Node
@@ -193,6 +195,15 @@ func Tokenize(p string) *Token {
 			}
 		}
 
+		// while token
+		if s == 'w' && len(p[current:]) >= 5 {
+			if str := p[current : current+5]; str == "while" && !IsAlnum(rune(p[current+5])) {
+				cur = NewToken(TK_WHILE, cur, str, current)
+				current += 5
+				continue
+			}
+		}
+
 		if 'a' <= s && s <= 'z' {
 			ident, readed := Ident(p, current)
 			cur = NewToken(TK_IDENT, cur, ident, current)
@@ -266,6 +277,13 @@ func NewNodeIf(compare *Node, then *Node) *Node {
 	}
 }
 
+func NewNodeWhile(compare *Node, then *Node) *Node {
+	return &Node{
+		Kind:    ND_WHILE,
+		Compare: compare,
+		Then:    then,
+	}
+}
 func NewNodeNum(val int) *Node {
 	return &Node{
 		Kind: ND_NUM,
@@ -300,6 +318,18 @@ func Stmt() *Node {
 				} else {
 					node = NewNodeIf(compare, then)
 				}
+			} else {
+				ErrorAt(token.Pos, "')'ではないトークンです")
+			}
+		} else {
+			ErrorAt(token.Pos, "'('ではないトークンです")
+		}
+	} else if ConsumeKind(TK_WHILE) {
+		if Consume("(") {
+			compare := Expr()
+			if Consume(")") {
+				then := Stmt()
+				node = NewNodeWhile(compare, then)
 			} else {
 				ErrorAt(token.Pos, "')'ではないトークンです")
 			}

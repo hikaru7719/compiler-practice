@@ -60,4 +60,6 @@ assert 2 "abc=1; if(abc>0) abc=2; abc;"
 assert 1 "abc=1; if(abc>1) abc=2; abc;"
 assert 2 "abc=1; if(abc>0) abc=2; else abc=3; abc;"
 assert 3 "abc=1; if(abc>1) abc=2; else abc=3; abc;"
+
+assert 4 "a=1; while(a<4) a=a+1; a;"
 echo OK
