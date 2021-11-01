@@ -24,6 +24,13 @@ func GenLval(node *Node) {
 
 func Gen(node *Node) {
 	switch node.Kind {
+	case ND_BLOCK:
+		for _, child := range node.Statements {
+			Gen(child)
+			// TODO: popする処理が必要？
+			// ref https://www.sigbus.info/compilerbook#%E3%82%B9%E3%83%86%E3%83%83%E3%83%9713-%E3%83%96%E3%83%AD%E3%83%83%E3%82%AF
+		}
+		return
 	case ND_IF_ELSE:
 		lelse := UniqueNum()
 		Increment()

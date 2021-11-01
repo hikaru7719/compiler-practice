@@ -50,6 +50,7 @@ const (
 	ND_IF_ELSE                        // if else
 	ND_WHILE                          // while
 	ND_FOR                            // for
+	ND_BLOCK                          // {}
 )
 
 type Node struct {
@@ -65,6 +66,9 @@ type Node struct {
 	// for
 	Init  *Node
 	After *Node
+
+	// block
+	Statements []*Node
 
 	Val    int
 	Offset int
@@ -238,7 +242,7 @@ func Tokenize(p string) *Token {
 			continue
 		}
 
-		if s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' || s == ';' {
+		if s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' || s == ';' || s == '{' || s == '}' {
 			cur = NewToken(TK_RESERVED, cur, string(s), current)
 			current++
 			continue
@@ -297,6 +301,13 @@ func NewNodeWhile(compare *Node, then *Node) *Node {
 		Kind:    ND_WHILE,
 		Compare: compare,
 		Then:    then,
+	}
+}
+
+func NewNodeBlock(statements []*Node) *Node {
+	return &Node{
+		Kind:       ND_BLOCK,
+		Statements: statements,
 	}
 }
 
@@ -393,6 +404,12 @@ func Stmt() *Node {
 		} else {
 			ErrorAt(token.Pos, "'('ではないトークンです")
 		}
+	} else if Consume("{") {
+		statements := []*Node{}
+		for !Consume("}") {
+			statements = append(statements, Stmt())
+		}
+		node = NewNodeBlock(statements)
 	} else {
 		node = Expr()
 		if !Consume(";") {

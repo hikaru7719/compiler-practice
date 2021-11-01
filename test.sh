@@ -67,4 +67,7 @@ assert 1 "a=1; for(i=0; a!=1; i=i+1;) a=2; a;"
 assert 1 "a=1; for(i=1; i!=1;;) a=2; a;"
 assert 2 "a=1; for(i=1; i<2; i=i+1;) a=2; a;"
 assert 4 "a=1; for(i=0; i<3; i=i+1;) a=a+1; a;"
+
+assert 1 "{a=1;a;}"
+assert 2 "{a=2;a;}"
 echo OK
