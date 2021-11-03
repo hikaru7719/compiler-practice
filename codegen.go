@@ -24,6 +24,9 @@ func GenLval(node *Node) {
 
 func Gen(node *Node) {
 	switch node.Kind {
+	case ND_FUNCTION:
+		fmt.Printf("	call %s\n", node.FunctionName)
+		return
 	case ND_BLOCK:
 		for _, child := range node.Statements {
 			Gen(child)

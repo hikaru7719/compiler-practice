@@ -51,6 +51,7 @@ const (
 	ND_WHILE                          // while
 	ND_FOR                            // for
 	ND_BLOCK                          // {}
+	ND_FUNCTION                       // function
 )
 
 type Node struct {
@@ -69,6 +70,9 @@ type Node struct {
 
 	// block
 	Statements []*Node
+
+	// function
+	FunctionName string
 
 	Val    int
 	Offset int
@@ -311,6 +315,13 @@ func NewNodeBlock(statements []*Node) *Node {
 	}
 }
 
+func NewNodeFunction(functionName string) *Node {
+	return &Node{
+		Kind:         ND_FUNCTION,
+		FunctionName: functionName,
+	}
+}
+
 func NewNodeFor(init *Node, compare *Node, after *Node, then *Node) *Node {
 	return &Node{
 		Kind:    ND_FOR,
@@ -506,6 +517,12 @@ func Primary() *Node {
 	}
 
 	if tok := ConsumeIdent(); tok != nil {
+		if Consume("(") {
+			if Consume(")") {
+				return NewNodeFunction(tok.Str)
+			}
+		}
+
 		node := NewNode(ND_LVAR, nil, nil)
 		if localVar := FindLocalVar(tok); localVar != nil {
 			node.Offset = localVar.Offset

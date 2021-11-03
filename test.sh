@@ -4,7 +4,7 @@ assert() {
     input="$2"
 
     ./main "$input" > tmp.s
-    cc -o tmp tmp.s
+    cc -o tmp tmp.s mock/foo.o
     ./tmp
     actual="$?"
 
@@ -70,4 +70,6 @@ assert 4 "a=1; for(i=0; i<3; i=i+1;) a=a+1; a;"
 
 assert 1 "{a=1;a;}"
 assert 2 "{a=2;a;}"
+assert 1 "foo(); 1;"
+
 echo OK
